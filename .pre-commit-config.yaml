@@ -1,0 +1,54 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        exclude: VERSION$
+      - id: check-merge-conflict
+      - id: debug-statements
+      # All non-bat files should end with LF
+      - id: mixed-line-ending
+        name: Ensure LF endings on files
+        args: [ "--fix=lf" ]
+        exclude: \.bat$
+      # Bat files should end with CRLF
+      - id: mixed-line-ending
+        name: Ensure CRLF endings on Windows files
+        args: [ "--fix=crlf" ]
+        files: \.bat$
+
+  # ShellCheck checks for issues in shell scripts
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+
+  # Ruff lints and formats Python code
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        name: ruff lint
+        args: [ --fix ]
+      - id: ruff
+        name: ruff sort imports
+        args: [ "--select", "I", "--fix" ]
+      - id: ruff-format
+        name: ruff format
+
+  # Bandit checks for security issues in Python code
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: [ "-c", "pyproject.toml", "-r" ]
+        additional_dependencies: [ "bandit[toml]" ]  # <- https://github.com/PyCQA/bandit/issues/902
+
+  # Skjold checks for security vulnerabilities in Python dependencies
+  - repo: https://github.com/twu/skjold
+    rev: v0.6.1
+    hooks:
+      - id: skjold
