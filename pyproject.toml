@@ -29,6 +29,7 @@ sources = ["pyup", "gemnasium", ]
 
 [tool.bandit]
 exclude_dirs = [".ci", ".venv", "venv", "tests", ]
+skips = ["B404", ]
 
 [tool.pytest.ini_options]
 log_cli = true
