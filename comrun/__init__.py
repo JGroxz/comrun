@@ -1,5 +1,3 @@
-from .comrun import CommandRunner
-from .datatypes import CommandResult
-from .errors import CommandError
+from .comrun import CommandError, CommandResult, CommandRunner
 
 __all__ = ["CommandRunner", "CommandResult", "CommandError"]
