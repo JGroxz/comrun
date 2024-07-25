@@ -15,6 +15,17 @@ _IS_ON_WINDOWS = os.name == "nt"
 _OUTPUT_ENCODING = "utf-8"
 
 
+def _default_live_output_callback(line: str, command: str, is_stderr: bool):
+    """
+    Default line print callback that uses the Rich console to print the line.
+    """
+    console = rich.get_console()
+
+    style = "red" if is_stderr else None
+
+    console.print(line, style=style)
+
+
 @dataclass(frozen=True, kw_only=True)
 class CommandRunner:
     cwd: os.PathLike[str] | None = None
@@ -28,11 +39,9 @@ class CommandRunner:
     wsl: bool = True
     """If set to True (default) and running on Windows, the provided command will be run in WSL."""
 
-    pre_run_callback: Callable[[], None] | None = None
-    """Callback to execute before the command is run."""
-    post_run_callback: Callable[[CommandResult], None] | None = None
-    """Callback to execute after the command is finished ()."""
-    output_line_callback: Callable[[str, str, bool], None] | None = None
+    live_output_callback: Callable[[str, str, bool], None] = (
+        _default_live_output_callback
+    )
     """
     Callback to print a line of the command's output.
     Will not be called if the 'quiet' option is set to True.
@@ -44,6 +53,10 @@ class CommandRunner:
 
     Defaults to using print() if not set.
     """
+    pre_run_callback: Callable[[str], None] | None = None
+    """Callback to execute before the command is run. Receives the command string as an argument."""
+    post_run_callback: Callable[[CommandResult], None] | None = None
+    """Callback to execute after the command is finished. Receives the CommandResult object as an argument."""
 
     def __call__(
         self,
@@ -90,7 +103,7 @@ class CommandRunner:
 
         # execute pre-run callback
         if self.pre_run_callback:
-            self.pre_run_callback()
+            self.pre_run_callback(command_string)
 
         # start the subprocess
         process = subprocess.Popen(  # nosec
@@ -134,9 +147,16 @@ class CommandRunner:
                     # capture shared output
                     all_lines.append(decoded_line)
 
-                    # # print to console if not silenced
-                    # if not quiet:
-                    #     self.output_line_callback(decoded_line, command_string, _stderr)
+                    # print to console if not silenced
+                    if not quiet:
+                        try:
+                            self.live_output_callback(
+                                decoded_line, command_string, _stderr
+                            )
+                        except Exception as e:
+                            print(
+                                f"{type(e).__name__} caught in live output callback. Please check your callback implementation."
+                            )
 
         # read stdout and stderr in threads to capture outputs from both streams concurrently
         with (
@@ -149,7 +169,6 @@ class CommandRunner:
 
         # wait for the subprocess to finish
         exit_code = process.wait()
-        executor.shutdown(wait=True)
 
         # create the result object
         result = CommandResult(
@@ -169,14 +188,3 @@ class CommandRunner:
             self.post_run_callback(result)
 
         return result
-
-    @staticmethod
-    def _default_output_line_callback(line: str, command: str, is_stderr: bool):
-        """
-        Default line print callback that uses the Rich console to print the line.
-        """
-        console = rich.get_console()
-
-        style = "red" if is_stderr else None
-
-        console.print(line, style=style)
