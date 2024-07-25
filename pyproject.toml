@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "comrun"
-version = "0.1.0-dev"
+version = "0.1.0"
 description = "Simplified and configurable wrapper for Python's subprocess.Popen"
 authors = [ "Yevhen Bondarenko <zekbond@gmail.com>",]
 readme = "README.md"
