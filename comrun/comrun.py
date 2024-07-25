@@ -154,18 +154,22 @@ class CommandRunner:
                                 decoded_line, command_string, _stderr
                             )
                         except Exception as e:
-                            print(
-                                f"{type(e).__name__} caught in live output callback. Please check your callback implementation."
+                            rich.print(
+                                f"[red]{type(e).__name__} caught in live output callback. Please check your callback implementation.[/]"
                             )
 
-        # read stdout and stderr in threads to capture outputs from both streams concurrently
-        with (
-            process.stdout,
-            process.stderr,
-            ThreadPoolExecutor(max_workers=2) as executor,
-        ):
-            executor.submit(_handle_subprocess_output, process.stdout, False)
-            executor.submit(_handle_subprocess_output, process.stderr, True)
+        try:
+            # read stdout and stderr in threads to capture outputs from both streams concurrently
+            with (
+                process.stdout,
+                process.stderr,
+                ThreadPoolExecutor(max_workers=2) as executor,
+            ):
+                executor.submit(_handle_subprocess_output, process.stdout, False)
+                executor.submit(_handle_subprocess_output, process.stderr, True)
+        except KeyboardInterrupt:
+            # kill the subprocess if the user interrupts the program
+            process.kill()
 
         # wait for the subprocess to finish
         exit_code = process.wait()
