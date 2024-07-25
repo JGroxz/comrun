@@ -21,6 +21,10 @@ def _default_live_output_callback(line: str, command: str, is_stderr: bool):
     """
     console = rich.get_console()
 
+    # sanitize the line to prevent Rich from interpreting control characters
+    line = line.replace("[", "\\[")
+
+    # set the style based on the stream
     style = "red" if is_stderr else None
 
     console.print(line, style=style)
