@@ -57,10 +57,10 @@ class CommandRunner:
 
     Defaults to using print() if not set.
     """
-    pre_run_callback: Callable[[str], None] | None = None
-    """Callback to execute before the command is run. Receives the command string as an argument."""
-    post_run_callback: Callable[[CommandResult], None] | None = None
-    """Callback to execute after the command is finished. Receives the CommandResult object as an argument."""
+    pre_run_callback: Callable[[str, bool], None] | None = None
+    """Callback to execute before the command is run. Receives the command string and quiet flag as arguments."""
+    post_run_callback: Callable[[CommandResult, bool], None] | None = None
+    """Callback to execute after the command is finished. Receives the CommandResult object and quiet flag as arguments."""
 
     def __call__(
         self,
@@ -107,7 +107,7 @@ class CommandRunner:
 
         # execute pre-run callback
         if self.pre_run_callback:
-            self.pre_run_callback(command_string)
+            self.pre_run_callback(command_string, quiet)
 
         # start the subprocess
         process = subprocess.Popen(  # nosec
@@ -193,6 +193,6 @@ class CommandRunner:
 
         # execute post-run callback
         if self.post_run_callback:
-            self.post_run_callback(result)
+            self.post_run_callback(result, quiet)
 
         return result
