@@ -49,6 +49,10 @@ class CommandResult:
 
         return f"Command '{self.command}' finished with exit code {self.exit_code:d}."
 
+    def __bool__(self):
+        # CommandResult is truthy only if the command was successful
+        return self.success
+
 
 @dataclass(frozen=True)
 class CommandOutput:

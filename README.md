@@ -47,9 +47,20 @@ if result.failure:  # <- Shorthand for result.exit_code != 0
     print(f"Command failed with exit code {result.exit_code}")
 ```
 
+You can also check for success just by using the `CommandResult` object as a boolean (it is truthy only if the command
+was successful):
+
+```python
+if result:
+    print(f"Command succeeded with exit code 0")
+else:
+    print(f"Command failed with exit code {result.exit_code}")
+```
+
 ### Output
 
-By default, **comrun** prints the command's output to the console as it appears. You can disable this behavior by passing `quiet=True`:
+By default, **comrun** prints the command's output to the console as it appears. You can disable this behavior by
+passing `quiet=True`:
 
 ```python
 comrun('echo "Potato."')
@@ -96,7 +107,7 @@ result = comrun('exit 1', raise_on_error=True)
 
 By default, **comrun** uses rich's `Console` for printing stdout and stderr lines as they come in from the command
 subprocess (unless `quiet=True` is passed). This output handling can be changed by passing a
-custom `output_line_callback` to the `CommandRunner`
+custom `live_output_callback` to the `CommandRunner`
 constructor:
 
 ```python
@@ -104,15 +115,17 @@ from comrun import CommandRunner
 
 
 def print_line_with_stream_name(line: str, command: str, is_stderr: bool):
+    # note: line argument does not have a trailing newline character
+
     if is_stderr:
         print(f"STDERR | {line}")
     else:
         print(f"STDOUT | {line}")
 
 
-comrun = CommandRunner(output_line_callback=print_line_with_stream_name)
+comrun = CommandRunner(live_output_callback=print_line_with_stream_name)
 
-result = comrun('echo "For science."')
+comrun('echo "For science."')
 
 # (prints "STDOUT | For science." to the console)
 ```
