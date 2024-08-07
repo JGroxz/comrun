@@ -9,7 +9,8 @@ from comrun.errors import CommandError
 IS_ON_WINDOWS = os.name == "nt"
 
 
-def test_exit_codes():
+@pytest.mark.asyncio
+async def test_exit_codes():
     assert not IS_ON_WINDOWS, "This test is not tested on Windows (yet)."
 
     comrun = CommandRunner()
@@ -32,12 +33,19 @@ def test_exit_codes():
         result.exit_code == excepted_exit_code
     ), f"Command '{command}' must fail with exit code {excepted_exit_code}."
 
+    # same for async
+    a_result = await comrun.a(command, raise_on_error=False)
+    assert (
+        a_result == result
+    ), "The async invocation result should be the same as the sync result."
+
     # test a valid command with non-zero exit code (with raise_on_error)
     with pytest.raises(CommandError):
         comrun(command, raise_on_error=True)
 
 
-def test_cwd():
+@pytest.mark.asyncio
+async def test_cwd():
     """Test that the working directory is being set correctly when running a shell command."""
 
     comrun = CommandRunner()
@@ -49,21 +57,24 @@ def test_cwd():
     assert result.success, f"Command '{command}' must successfully execute."
     assert result.output.stripped == os.getcwd(), "Working directory is not correct."
 
-    print(f"none: {result.output}")
-
     # custom working directory
     custom_cwd = str(Path(__file__).parent.parent)
     result = comrun(command, cwd=custom_cwd)
-
-    print(f"custom: {result.output}")
 
     assert result.success, f"Command '{command}' must successfully execute."
     assert (
         result.output.stripped == custom_cwd
     ), "Custom working directory is not correct."
 
+    # same for async
+    a_result = await comrun.a(command, cwd=custom_cwd)
+    assert (
+        a_result == result
+    ), "The async invocation result should be the same as the sync result."
 
-def test_output():
+
+@pytest.mark.asyncio
+async def test_output():
     """Test that a valid shell command is executed correctly."""
 
     comrun = CommandRunner()
@@ -85,8 +96,15 @@ def test_output():
         result.output.lines == test_echo_message_lines
     ), "Captured output of the command split into lines is not correct."
 
+    # same for async
+    a_result = await comrun.a(command, wsl=True)
+    assert (
+        a_result == result
+    ), "The async invocation result should be the same as the sync result."
 
-def test_environment_variables():
+
+@pytest.mark.asyncio
+async def test_environment_variables():
     """Test that environment variables are being set correctly when running a shell command."""
 
     comrun = CommandRunner()
@@ -104,8 +122,15 @@ def test_environment_variables():
         result.output.stripped == test_env_var_value
     ), "Environment variable is not set correctly."
 
+    # same for async
+    a_result = await comrun.a(command, env=test_env)
+    assert (
+        a_result == result
+    ), "The async invocation result should be the same as the sync result."
 
-def test_invalid_command():
+
+@pytest.mark.asyncio
+async def test_invalid_command():
     """Test that an invalid shell command raises an exception."""
 
     comrun = CommandRunner()
@@ -116,3 +141,7 @@ def test_invalid_command():
     )
     with pytest.raises(FileNotFoundError):
         comrun(invalid_command, raise_on_error=False)
+
+    # same for async
+    with pytest.raises(FileNotFoundError):
+        await comrun.a(invalid_command, raise_on_error=False)
