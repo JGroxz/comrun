@@ -20,7 +20,7 @@ exclude_dirs = [ ".ci", ".venv", "venv", "tests",]
 skips = [ "B404",]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 rich = "^13.7.1"
 
 [tool.pytest.ini_options]
@@ -31,6 +31,7 @@ addopts = "--color=yes"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.2"
+pytest-asyncio = "^0.23.8"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.1"
