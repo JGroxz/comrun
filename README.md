@@ -47,6 +47,16 @@ if result.failure:  # <- Shorthand for result.exit_code != 0
     print(f"Command failed with exit code {result.exit_code}")
 ```
 
+You can also check for success just by using the `CommandResult` object as a boolean (it is truthy only if the command
+was successful):
+
+```python
+if result:
+    print(f"Command succeeded with exit code 0")
+else:
+    print(f"Command failed with exit code {result.exit_code}")
+```
+
 ### Output
 
 By default, **comrun** prints the command's output to the console as it appears. You can disable this behavior by
