@@ -31,6 +31,7 @@ addopts = "--color=yes"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.2"
+pytest-asyncio = "^0.23.8"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.1"

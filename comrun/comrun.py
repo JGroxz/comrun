@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shlex
 import subprocess
@@ -32,7 +33,7 @@ def _default_live_output_callback(line: str, command: str, is_stderr: bool):
 
 @dataclass(frozen=True, kw_only=True)
 class CommandRunner:
-    cwd: os.PathLike[str] | None = None
+    cwd: os.PathLike[str] | str | None = None
     """Working directory to execute the command in."""
     env: dict[str, str] | None = None
     """Environment variables for the command's subprocess."""
@@ -66,7 +67,7 @@ class CommandRunner:
         self,
         command: str | list[str],
         *,
-        cwd: os.PathLike[str] | None = None,
+        cwd: os.PathLike[str] | str | None = None,
         env: dict[str, str] | None = None,
         quiet: bool | None = None,
         raise_on_error: bool | None = None,
@@ -196,3 +197,38 @@ class CommandRunner:
             self.post_run_callback(result, quiet)
 
         return result
+
+    async def a(
+        self,
+        command: str | list[str],
+        *,
+        cwd: os.PathLike[str] | str | None = None,
+        env: dict[str, str] | None = None,
+        quiet: bool | None = None,
+        raise_on_error: bool | None = None,
+        wsl: bool | None = None,
+    ) -> CommandResult:
+        """
+        Executes the given command in a subprocess, asynchronously.
+
+        Args:
+            command: Command to execute.
+            cwd: Working directory to execute the command in.
+                Defaults to the working directory set in the constructor.
+            env: Environment variables for the command's subprocess.
+                Defaults to the environment set in the constructor.
+            quiet: If set to True, command output will be suppressed. If set to False, command output will be printed to the console.
+                Defaults to the value set in the constructor.
+            raise_on_error: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
+            wsl: If set to True and running on Windows, the provided command will be run in WSL.
+                Defaults to the value set in the constructor.
+        """
+        return await asyncio.to_thread(
+            self.__call__,
+            command,
+            cwd=cwd,
+            env=env,
+            quiet=quiet,
+            raise_on_error=raise_on_error,
+            wsl=wsl,
+        )
