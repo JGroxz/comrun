@@ -20,7 +20,7 @@ exclude_dirs = [ ".ci", ".venv", "venv", "tests",]
 skips = [ "B404",]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 rich = "^13.7.1"
 
 [tool.pytest.ini_options]
