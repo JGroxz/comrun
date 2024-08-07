@@ -145,3 +145,22 @@ async def test_invalid_command():
     # same for async
     with pytest.raises(FileNotFoundError):
         await comrun.a(invalid_command, raise_on_error=False)
+
+
+@pytest.mark.asyncio
+async def test_command_result_truthiness():
+    """Test that the truthiness of a CommandResult object is based on the success of the command."""
+
+    comrun = CommandRunner()
+
+    # test a valid command with zero exit code
+    command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
+    result = comrun(command, raise_on_error=False)
+
+    assert result, "A successful command must be truthy."
+
+    # test a valid command with non-zero exit code
+    command = "false" if not IS_ON_WINDOWS else "exit /b 42"
+    result = comrun(command, raise_on_error=False)
+
+    assert not result, "A failed command must not be truthy."
