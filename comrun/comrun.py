@@ -159,8 +159,9 @@ class CommandRunner:
                                 decoded_line, command_string, _stderr
                             )
                         except Exception as e:
+                            error_message = str(e).replace("[", "\\[")
                             rich.print(
-                                f"[red]{type(e).__name__} caught in live output callback. Please check your callback implementation.[/]"
+                                f"[red][i]{type(e).__name__}[/] caught in live output callback:[/] {error_message}"
                             )
 
         try:
