@@ -24,10 +24,10 @@ def _default_on_line(line: str, command: str, is_stderr: bool):
     """
     console = rich.get_console()
 
-    # sanitize the line to prevent Rich from interpreting control characters
+    # Sanitize the line to prevent Rich from interpreting control characters
     line = line.replace("[", "\\[")
 
-    # set the style based on the stream
+    # Set the style based on the stream
     style = "red" if is_stderr else None
 
     console.print(line, style=style)
@@ -135,26 +135,26 @@ class CommandRunner:
                 Defaults to the value set in the constructor.
         """
 
-        # use the arguments or pre-configured values
+        # Use the arguments or pre-configured values
         cwd = cwd or self.cwd
         env = env or self.env
         wsl = wsl or self.wsl
         quiet = quiet or self.quiet
         check = check if (check is not None) else self.check
 
-        # use WSL if required on Windows
+        # Use WSL if required on Windows
         command_string = command if isinstance(command, str) else shlex.join(command)
         if _IS_ON_WINDOWS and wsl:
             command = f"wsl {command_string}"
 
-        # prepare command args list
+        # Prepare the command args list
         args = shlex.split(command) if isinstance(command, str) else command
 
-        # execute pre-run callback
+        # Execute the pre-run callback
         if self.on_start:
             self.on_start(command_string, quiet)
 
-        # start the subprocess
+        # Start the subprocess
         process = subprocess.Popen(  # nosec
             args,
             stdout=subprocess.PIPE,
@@ -167,36 +167,36 @@ class CommandRunner:
         if process.stderr is None:
             raise RuntimeError("Failed to open the command's stderr stream.")
 
-        # lock is required to prevent prints from stdout- and stderr-reading threads from interfering with each other
+        # Lock is required to prevent prints from stdout- and stderr-reading threads from interfering with each other
         output_lock = Lock()
 
-        # prepare output buffers
+        # Prepare output buffers
         stdout_lines: list[str] = []
         stderr_lines: list[str] = []
         all_lines: list[str] = []
 
-        # define the output line callback
+        # Define the output line callback
         def _handle_subprocess_output(pipe: IO, _stderr: bool):
             """
             Reads lines from the stream and decodes them.
             """
-            for line in iter(pipe.readline, b""):  # b'\n'-separated lines
+            for line in iter(pipe.readline, b""):  # b'\n'-separated lines.
                 decoded_line: str = line.decode(_OUTPUT_ENCODING)
 
-                # remove the trailing newline character
+                # Remove the trailing newline character
                 decoded_line = decoded_line[:-1]
 
                 with output_lock:
-                    # capture output
+                    # Capture output
                     if _stderr:
                         stderr_lines.append(decoded_line)
                     else:
                         stdout_lines.append(decoded_line)
 
-                    # capture shared output
+                    # Capture shared output
                     all_lines.append(decoded_line)
 
-                    # print to console if not silenced
+                    # Print to console if not silenced
                     if not quiet:
                         try:
                             self.on_line(decoded_line, command_string, _stderr)
@@ -207,7 +207,7 @@ class CommandRunner:
                             )
 
         try:
-            # read stdout and stderr in threads to capture outputs from both streams concurrently
+            # Read stdout and stderr in threads to capture outputs from both streams concurrently
             with (
                 process.stdout,
                 process.stderr,
@@ -216,13 +216,13 @@ class CommandRunner:
                 executor.submit(_handle_subprocess_output, process.stdout, False)
                 executor.submit(_handle_subprocess_output, process.stderr, True)
         except KeyboardInterrupt:
-            # kill the subprocess if the user interrupts the program
+            # Kill the subprocess if the user interrupts the program
             process.kill()
 
-        # wait for the subprocess to finish
+        # Wait for the subprocess to finish
         exit_code = process.wait()
 
-        # create the result object
+        # Create the result object
         result = CommandResult(
             command=command_string,
             exit_code=exit_code,
@@ -231,11 +231,11 @@ class CommandRunner:
             output=CommandOutput(tuple(all_lines)),
         )
 
-        # raise on error if required
+        # Raise on error if required
         if result.failure and check:
             raise CommandError(command_string, result)
 
-        # execute post-run callback
+        # Execute the post-run callback
         if self.on_finish:
             self.on_finish(result, quiet)
 

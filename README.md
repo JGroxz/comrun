@@ -115,7 +115,7 @@ from comrun import CommandRunner
 
 
 def print_line_with_stream_name(line: str, command: str, is_stderr: bool):
-    # note: line argument does not have a trailing newline character
+    # Note: line argument does not have a trailing newline character
 
     if is_stderr:
         print(f"STDERR | {line}")

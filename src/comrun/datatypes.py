@@ -60,7 +60,7 @@ class CommandOutput:
     """Output split into lines."""
 
     def __post_init__(self):
-        # ensure immutability even if a list was provided
+        # Ensure immutability even if a list was provided
         object.__setattr__(self, "lines", tuple(self.lines))
 
     @cached_property

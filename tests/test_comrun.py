@@ -15,7 +15,7 @@ async def test_exit_codes(comrun: CommandRunner):
     """
     assert not IS_ON_WINDOWS, "This test is not tested on Windows (yet)."
 
-    # test a valid command with zero exit code
+    # Test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
     result = comrun.run(command, check=False)
 
@@ -23,7 +23,7 @@ async def test_exit_codes(comrun: CommandRunner):
         f"Command '{command}' must successfully execute with exit code 0."
     )
 
-    # test a valid command with non-zero exit code (without raising an exception
+    # Test a valid command with non-zero exit code (without raising an exception
     command = "false" if not IS_ON_WINDOWS else "exit /b 42"
     excepted_exit_code = 1
     result = comrun.run(command, check=False)
@@ -33,13 +33,13 @@ async def test_exit_codes(comrun: CommandRunner):
         f"Command '{command}' must fail with exit code {excepted_exit_code}."
     )
 
-    # same for async
+    # Same for async
     a_result = await comrun.run_async(command, check=False)
     assert a_result == result, (
         "The async invocation result should be the same as the sync result."
     )
 
-    # test a valid command with non-zero exit code (with check)
+    # Test a valid command with non-zero exit code (with check)
     with pytest.raises(CommandError):
         comrun.run(command, check=True)
 
@@ -50,14 +50,14 @@ async def test_cwd(comrun: CommandRunner):
     Tests that the working directory is being set correctly when running a shell command.
     """
 
-    # current working directory
+    # Current working directory
     command = "pwd"
     result = comrun.run("pwd")
 
     assert result.success, f"Command '{command}' must successfully execute."
     assert result.output.stripped == os.getcwd(), "Working directory is not correct."
 
-    # custom working directory
+    # Custom working directory
     custom_cwd = str(Path(__file__).parent.parent)
     result = comrun.run(command, cwd=custom_cwd)
 
@@ -66,7 +66,7 @@ async def test_cwd(comrun: CommandRunner):
         "Custom working directory is not correct."
     )
 
-    # same for async
+    # Same for async
     a_result = await comrun.run_async(command, cwd=custom_cwd)
     assert a_result == result, (
         "The async invocation result should be the same as the sync result."
@@ -96,7 +96,7 @@ async def test_output(comrun: CommandRunner):
         "Captured output of the command split into lines is not correct."
     )
 
-    # same for async
+    # Same for async
     a_result = await comrun.run_async(command, wsl=True)
     assert a_result == result, (
         "The async invocation result should be the same as the sync result."
@@ -109,7 +109,7 @@ async def test_environment_variables(comrun: CommandRunner):
     Tests that environment variables are applied to the spawned subprocess.
     """
 
-    # test environment variables
+    # Test environment variables
     test_env_var_name = "TEST_ENV_VAR"
     test_env_var_value = "test_value"
     test_env = {test_env_var_name: test_env_var_value}
@@ -122,7 +122,7 @@ async def test_environment_variables(comrun: CommandRunner):
         "Environment variable is not set correctly."
     )
 
-    # same for async
+    # Same for async
     a_result = await comrun.run_async(command, env=test_env)
     assert a_result == result, (
         "The async invocation result should be the same as the sync result."
@@ -135,14 +135,14 @@ async def test_invalid_command(comrun: CommandRunner):
     Tests that running a non-existent command raises the expected exception.
     """
 
-    # test an invalid command (it must raise an exception even if check is False)
+    # Test an invalid command (it must raise an exception even if check is False)
     invalid_command = (
         "invalid_command_that_doesnt_exist --with-invalid-option and-invalid-argument"
     )
     with pytest.raises(FileNotFoundError):
         comrun.run(invalid_command, check=False)
 
-    # same for async
+    # Same for async
     with pytest.raises(FileNotFoundError):
         await comrun.run_async(invalid_command, check=False)
 
@@ -152,13 +152,13 @@ def test_command_result_truthiness(comrun: CommandRunner):
     Tests that CommandResult truthiness reflects command success.
     """
 
-    # test a valid command with zero exit code
+    # Test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
     result = comrun.run(command, check=False)
 
     assert result, "A successful command must be truthy."
 
-    # test a valid command with non-zero exit code
+    # Test a valid command with non-zero exit code
     command = "false" if (not IS_ON_WINDOWS) else "exit /b 42"
     result = comrun.run(command, check=False)
 
