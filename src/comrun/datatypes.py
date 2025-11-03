@@ -45,7 +45,7 @@ class CommandResult:
                 return f"Command '{self.command}' died with unknown signal {-self.exit_code:d}."
 
         if self.exit_code == 0:
-            return f"Command '{self.command}' finished with non-zero exit status {self.exit_code:d}."
+            return f"Command '{self.command}' finished with exit status {self.exit_code:d}."
 
         return f"Command '{self.command}' finished with exit code {self.exit_code:d}."
 
