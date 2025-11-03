@@ -6,7 +6,7 @@ import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from threading import Lock
-from typing import IO, Callable
+from typing import IO, Callable, Literal
 
 import rich
 
@@ -18,7 +18,10 @@ _OUTPUT_ENCODING = "utf-8"
 _UNSET = object()
 
 
-def _default_on_line(line: str, is_stderr: bool, ctx: CommandContext):
+StreamName = Literal["stdout", "stderr"]
+
+
+def _default_on_line(line: str, stream: StreamName, ctx: CommandContext):
     """
     Default line print callback that uses the Rich console to print the line.
     """
@@ -28,7 +31,7 @@ def _default_on_line(line: str, is_stderr: bool, ctx: CommandContext):
     line = line.replace("[", "\\[")
 
     # Set the style based on the stream
-    style = "red" if is_stderr else None
+    style = "red" if stream == "stderr" else None
 
     console.print(line, style=style)
 
@@ -46,8 +49,8 @@ class CommandRunner:
     wsl: bool = True
     """On Windows, run the command through WSL when True; ignored on other platforms."""
 
-    on_line: Callable[[str, bool, CommandContext], None] = _default_on_line
-    """Per-line output callback `(line, is_stderr, ctx)`; skipped when quiet=True. Defaults to Rich console."""
+    on_line: Callable[[str, StreamName, CommandContext], None] = _default_on_line
+    """Per-line output callback `(line, stream, ctx)`; skipped when quiet=True. Defaults to Rich console."""
     on_start: Callable[[CommandContext], None] | None = None
     """Hook invoked just before execution with the resolved command context."""
     on_finish: Callable[[CommandResult, CommandContext], None] | None = None
@@ -61,7 +64,7 @@ class CommandRunner:
         quiet: bool | None | object = _UNSET,
         check: bool | None | object = _UNSET,
         wsl: bool | None | object = _UNSET,
-        on_line: Callable[[str, bool, CommandContext], None] | object = _UNSET,
+        on_line: Callable[[str, StreamName, CommandContext], None] | object = _UNSET,
         on_start: Callable[[CommandContext], None] | None | object = _UNSET,
         on_finish: Callable[[CommandResult, CommandContext], None] | None | object = _UNSET,
     ) -> "CommandRunner":
@@ -208,7 +211,8 @@ class CommandRunner:
                     # Print to console if not silenced
                     if not quiet:
                         try:
-                            self.on_line(decoded_line, _stderr, context)
+                            stream: StreamName = "stderr" if _stderr else "stdout"
+                            self.on_line(decoded_line, stream, context)
                         except Exception as e:
                             error_message = str(e).replace("[", "\\[")
                             rich.print(

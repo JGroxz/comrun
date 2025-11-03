@@ -1,4 +1,4 @@
-# comrun
+# _\>__ comrun
 
 **comrun** (shorthand for **command runner**) is a simplified and configurable wrapper for
 Python's [`subprocess.Popen`](https://docs.python.org/3.11/library/subprocess.html#popen-constructor), focused on making
@@ -111,14 +111,13 @@ custom `on_line` callback to the `CommandRunner`
 constructor:
 
 ```python
-from comrun import CommandRunner, CommandContext
+from comrun import CommandContext, CommandRunner
 
 
-def print_line_with_stream_name(line: str, is_stderr: bool, ctx: CommandContext):
+def print_line_with_stream_name(line: str, stream: str, ctx: CommandContext):
     # Note: line argument does not have a trailing newline character
 
-    stream = "STDERR" if is_stderr else "STDOUT"
-    print(f"{stream} | {ctx.command} | {line}")
+    print(f"{stream.upper()} | {ctx.command} | {line}")
 
 
 comrun = CommandRunner(on_line=print_line_with_stream_name)
