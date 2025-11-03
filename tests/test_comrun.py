@@ -17,7 +17,7 @@ async def test_exit_codes(comrun: CommandRunner):
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
-    result = comrun.run(command, raise_on_error=False)
+    result = comrun.run(command, check=False)
 
     assert result.success, (
         f"Command '{command}' must successfully execute with exit code 0."
@@ -26,7 +26,7 @@ async def test_exit_codes(comrun: CommandRunner):
     # test a valid command with non-zero exit code (without raising an exception
     command = "false" if not IS_ON_WINDOWS else "exit /b 42"
     excepted_exit_code = 1
-    result = comrun.run(command, raise_on_error=False)
+    result = comrun.run(command, check=False)
 
     assert result.failure, f"Command '{command}' must fail with non-zero exit code."
     assert result.exit_code == excepted_exit_code, (
@@ -34,14 +34,14 @@ async def test_exit_codes(comrun: CommandRunner):
     )
 
     # same for async
-    a_result = await comrun.run_async(command, raise_on_error=False)
+    a_result = await comrun.run_async(command, check=False)
     assert a_result == result, (
         "The async invocation result should be the same as the sync result."
     )
 
-    # test a valid command with non-zero exit code (with raise_on_error)
+    # test a valid command with non-zero exit code (with check)
     with pytest.raises(CommandError):
-        comrun.run(command, raise_on_error=True)
+        comrun.run(command, check=True)
 
 
 @pytest.mark.asyncio
@@ -135,16 +135,16 @@ async def test_invalid_command(comrun: CommandRunner):
     Tests that running a non-existent command raises the expected exception.
     """
 
-    # test an invalid command (it must raise an exception even if raise_on_error is False)
+    # test an invalid command (it must raise an exception even if check is False)
     invalid_command = (
         "invalid_command_that_doesnt_exist --with-invalid-option and-invalid-argument"
     )
     with pytest.raises(FileNotFoundError):
-        comrun.run(invalid_command, raise_on_error=False)
+        comrun.run(invalid_command, check=False)
 
     # same for async
     with pytest.raises(FileNotFoundError):
-        await comrun.run_async(invalid_command, raise_on_error=False)
+        await comrun.run_async(invalid_command, check=False)
 
 
 def test_command_result_truthiness(comrun: CommandRunner):
@@ -154,13 +154,13 @@ def test_command_result_truthiness(comrun: CommandRunner):
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
-    result = comrun.run(command, raise_on_error=False)
+    result = comrun.run(command, check=False)
 
     assert result, "A successful command must be truthy."
 
     # test a valid command with non-zero exit code
     command = "false" if (not IS_ON_WINDOWS) else "exit /b 42"
-    result = comrun.run(command, raise_on_error=False)
+    result = comrun.run(command, check=False)
 
     assert not result, "A failed command must not be truthy."
 
@@ -171,9 +171,9 @@ def test_with_options_creates_configured_copy(comrun: CommandRunner):
     """
 
     same_runner = comrun.with_options()
-    assert (
-        same_runner is comrun
-    ), "with_options() without overrides should return the original instance."
+    assert same_runner is comrun, (
+        "with_options() without overrides should return the original instance."
+    )
 
     custom_env = {"WITH_OPTIONS_TEST": "1"}
     configured_runner = comrun.with_options(
@@ -182,27 +182,31 @@ def test_with_options_creates_configured_copy(comrun: CommandRunner):
         wsl=False,
     )
 
-    assert (
-        configured_runner is not comrun
-    ), "Overriding options should yield a new CommandRunner instance."
-    assert configured_runner.quiet is True, "Quiet override must apply to the new runner."
-    assert (
-        configured_runner.env == custom_env
-    ), "Environment override must be carried to the new runner."
-    assert configured_runner.wsl is False, "WSL override must be carried to the new runner."
+    assert configured_runner is not comrun, (
+        "Overriding options should yield a new CommandRunner instance."
+    )
+    assert configured_runner.quiet is True, (
+        "Quiet override must apply to the new runner."
+    )
+    assert configured_runner.env == custom_env, (
+        "Environment override must be carried to the new runner."
+    )
+    assert configured_runner.wsl is False, (
+        "WSL override must be carried to the new runner."
+    )
 
     assert comrun.quiet is False, "Original runner's quiet flag must remain unchanged."
     assert comrun.env is None, "Original runner's env must remain unchanged."
     assert comrun.wsl is True, "Original runner's WSL flag must remain unchanged."
 
     chained_runner = configured_runner.with_options(quiet=False)
-    assert (
-        chained_runner is not configured_runner
-    ), "A chained with_options() call should return a different instance when overrides change."
+    assert chained_runner is not configured_runner, (
+        "A chained with_options() call should return a different instance when overrides change."
+    )
     assert chained_runner.quiet is False, "Latest quiet override must be reflected."
-    assert (
-        chained_runner.env == custom_env
-    ), "Existing overrides must persist when not replaced."
-    assert (
-        chained_runner.wsl is False
-    ), "Unchanged options should carry forward through chained overrides."
+    assert chained_runner.env == custom_env, (
+        "Existing overrides must persist when not replaced."
+    )
+    assert chained_runner.wsl is False, (
+        "Unchanged options should carry forward through chained overrides."
+    )

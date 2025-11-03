@@ -41,7 +41,7 @@ class CommandRunner:
     """Environment variables for the command's subprocess."""
     quiet: bool = False
     """If set to True, command output will not be printed to console. If set to False, command output will be printed to the console."""
-    raise_on_error: bool = False
+    check: bool = False
     """If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code."""
     wsl: bool = True
     """If set to True (default) and running on Windows, the provided command will be run in WSL."""
@@ -71,11 +71,13 @@ class CommandRunner:
         cwd: os.PathLike[str] | str | None | object = _UNSET,
         env: dict[str, str] | None | object = _UNSET,
         quiet: bool | None | object = _UNSET,
-        raise_on_error: bool | None | object = _UNSET,
+        check: bool | None | object = _UNSET,
         wsl: bool | None | object = _UNSET,
         live_output_callback: Callable[[str, str, bool], None] | object = _UNSET,
         pre_run_callback: Callable[[str, bool], None] | None | object = _UNSET,
-        post_run_callback: Callable[[CommandResult, bool], None] | None | object = _UNSET,
+        post_run_callback: Callable[[CommandResult, bool], None]
+        | None
+        | object = _UNSET,
     ) -> "CommandRunner":
         """
         Returns a copy of this CommandRunner with the provided options overridden.
@@ -88,8 +90,8 @@ class CommandRunner:
             updates["env"] = env
         if quiet is not _UNSET:
             updates["quiet"] = quiet
-        if raise_on_error is not _UNSET:
-            updates["raise_on_error"] = raise_on_error
+        if check is not _UNSET:
+            updates["check"] = check
         if wsl is not _UNSET:
             updates["wsl"] = wsl
         if live_output_callback is not _UNSET:
@@ -108,7 +110,7 @@ class CommandRunner:
         cwd: os.PathLike[str] | str | None = None,
         env: dict[str, str] | None = None,
         quiet: bool | None = None,
-        raise_on_error: bool | None = None,
+        check: bool | None = None,
         wsl: bool | None = None,
     ) -> CommandResult:
         """Alias for run()."""
@@ -117,7 +119,7 @@ class CommandRunner:
             cwd=cwd,
             env=env,
             quiet=quiet,
-            raise_on_error=raise_on_error,
+            check=check,
             wsl=wsl,
         )
 
@@ -128,7 +130,7 @@ class CommandRunner:
         cwd: os.PathLike[str] | str | None = None,
         env: dict[str, str] | None = None,
         quiet: bool | None = None,
-        raise_on_error: bool | None = None,
+        check: bool | None = None,
         wsl: bool | None = None,
     ) -> CommandResult:
         """
@@ -142,7 +144,7 @@ class CommandRunner:
                 Defaults to the environment set in the constructor.
             quiet: If set to True, command output will be suppressed. If set to False, command output will be printed to the console.
                 Defaults to the value set in the constructor.
-            raise_on_error: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
+            check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
                 Defaults to the value set in the constructor.
         """
@@ -152,9 +154,7 @@ class CommandRunner:
         env = env or self.env
         wsl = wsl or self.wsl
         quiet = quiet or self.quiet
-        raise_on_error = (
-            raise_on_error if (raise_on_error is not None) else self.raise_on_error
-        )
+        check = check if (check is not None) else self.check
 
         # use WSL if required on Windows
         command_string = command if isinstance(command, str) else shlex.join(command)
@@ -248,7 +248,7 @@ class CommandRunner:
         )
 
         # raise on error if required
-        if result.failure and raise_on_error:
+        if result.failure and check:
             raise CommandError(command_string, result)
 
         # execute post-run callback
@@ -264,7 +264,7 @@ class CommandRunner:
         cwd: os.PathLike[str] | str | None = None,
         env: dict[str, str] | None = None,
         quiet: bool | None = None,
-        raise_on_error: bool | None = None,
+        check: bool | None = None,
         wsl: bool | None = None,
     ) -> CommandResult:
         """
@@ -278,7 +278,7 @@ class CommandRunner:
                 Defaults to the environment set in the constructor.
             quiet: If set to True, command output will be suppressed. If set to False, command output will be printed to the console.
                 Defaults to the value set in the constructor.
-            raise_on_error: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
+            check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
                 Defaults to the value set in the constructor.
         """
@@ -288,6 +288,6 @@ class CommandRunner:
             cwd=cwd,
             env=env,
             quiet=quiet,
-            raise_on_error=raise_on_error,
+            check=check,
             wsl=wsl,
         )

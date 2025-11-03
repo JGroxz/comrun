@@ -93,13 +93,13 @@ print(result.output)  # <- Prints all output lines of the command
 ### Exceptions
 
 By default, **comrun** will quietly execute the command even if it fails and returns a non-zero exit code. If you want
-to catch it as an exception instead, you can pass `raise_on_error=True`:
+to catch it as an exception instead, you can pass `check=True`:
 
 ```python
 result = comrun('exit 1')
 # (executed normally, result.exit_code == 1)
 
-result = comrun('exit 1', raise_on_error=True)
+result = comrun('exit 1', check=True)
 # (raises a CommandError because the command fails)
 ```
 

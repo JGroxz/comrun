@@ -6,7 +6,7 @@ from .datatypes import CommandResult
 
 class CommandError(SubprocessError):
     """
-    Raised when a CommandRunner instance is called with raise_on_error=True and the process returns a non-zero exit status.
+    Raised when a CommandRunner instance is called with check=True and the process returns a non-zero exit status.
     """
 
     def __init__(self, command: str, result: CommandResult):
