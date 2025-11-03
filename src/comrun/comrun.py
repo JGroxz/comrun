@@ -4,7 +4,7 @@ import shlex
 import subprocess
 import warnings
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from threading import Lock
 from typing import IO, Callable
 
@@ -15,6 +15,7 @@ from .errors import CommandError
 
 _IS_ON_WINDOWS = os.name == "nt"
 _OUTPUT_ENCODING = "utf-8"
+_UNSET = object()
 
 
 def _default_live_output_callback(line: str, command: str, is_stderr: bool):
@@ -63,6 +64,42 @@ class CommandRunner:
     """Callback to execute before the command is run. Receives the command string and quiet flag as arguments."""
     post_run_callback: Callable[[CommandResult, bool], None] | None = None
     """Callback to execute after the command is finished. Receives the CommandResult object and quiet flag as arguments."""
+
+    def with_options(
+        self,
+        *,
+        cwd: os.PathLike[str] | str | None | object = _UNSET,
+        env: dict[str, str] | None | object = _UNSET,
+        quiet: bool | None | object = _UNSET,
+        raise_on_error: bool | None | object = _UNSET,
+        wsl: bool | None | object = _UNSET,
+        live_output_callback: Callable[[str, str, bool], None] | object = _UNSET,
+        pre_run_callback: Callable[[str, bool], None] | None | object = _UNSET,
+        post_run_callback: Callable[[CommandResult, bool], None] | None | object = _UNSET,
+    ) -> "CommandRunner":
+        """
+        Returns a copy of this CommandRunner with the provided options overridden.
+        """
+        updates: dict[str, object] = {}
+
+        if cwd is not _UNSET:
+            updates["cwd"] = cwd
+        if env is not _UNSET:
+            updates["env"] = env
+        if quiet is not _UNSET:
+            updates["quiet"] = quiet
+        if raise_on_error is not _UNSET:
+            updates["raise_on_error"] = raise_on_error
+        if wsl is not _UNSET:
+            updates["wsl"] = wsl
+        if live_output_callback is not _UNSET:
+            updates["live_output_callback"] = live_output_callback
+        if pre_run_callback is not _UNSET:
+            updates["pre_run_callback"] = pre_run_callback
+        if post_run_callback is not _UNSET:
+            updates["post_run_callback"] = post_run_callback
+
+        return replace(self, **updates) if updates else self
 
     def __call__(
         self,
@@ -205,9 +242,9 @@ class CommandRunner:
         result = CommandResult(
             command=command_string,
             exit_code=exit_code,
-            stdout=CommandOutput(stdout_lines),
-            stderr=CommandOutput(stderr_lines),
-            output=CommandOutput(all_lines),
+            stdout=CommandOutput(tuple(stdout_lines)),
+            stderr=CommandOutput(tuple(stderr_lines)),
+            output=CommandOutput(tuple(all_lines)),
         )
 
         # raise on error if required

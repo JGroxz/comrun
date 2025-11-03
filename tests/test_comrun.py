@@ -163,3 +163,46 @@ def test_command_result_truthiness(comrun: CommandRunner):
     result = comrun.run(command, raise_on_error=False)
 
     assert not result, "A failed command must not be truthy."
+
+
+def test_with_options_creates_configured_copy(comrun: CommandRunner):
+    """
+    Tests that with_options returns a new runner with the requested overrides.
+    """
+
+    same_runner = comrun.with_options()
+    assert (
+        same_runner is comrun
+    ), "with_options() without overrides should return the original instance."
+
+    custom_env = {"WITH_OPTIONS_TEST": "1"}
+    configured_runner = comrun.with_options(
+        quiet=True,
+        env=custom_env,
+        wsl=False,
+    )
+
+    assert (
+        configured_runner is not comrun
+    ), "Overriding options should yield a new CommandRunner instance."
+    assert configured_runner.quiet is True, "Quiet override must apply to the new runner."
+    assert (
+        configured_runner.env == custom_env
+    ), "Environment override must be carried to the new runner."
+    assert configured_runner.wsl is False, "WSL override must be carried to the new runner."
+
+    assert comrun.quiet is False, "Original runner's quiet flag must remain unchanged."
+    assert comrun.env is None, "Original runner's env must remain unchanged."
+    assert comrun.wsl is True, "Original runner's WSL flag must remain unchanged."
+
+    chained_runner = configured_runner.with_options(quiet=False)
+    assert (
+        chained_runner is not configured_runner
+    ), "A chained with_options() call should return a different instance when overrides change."
+    assert chained_runner.quiet is False, "Latest quiet override must be reflected."
+    assert (
+        chained_runner.env == custom_env
+    ), "Existing overrides must persist when not replaced."
+    assert (
+        chained_runner.wsl is False
+    ), "Unchanged options should carry forward through chained overrides."
