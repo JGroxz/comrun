@@ -17,31 +17,31 @@ async def test_exit_codes():
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
-    result = comrun(command, raise_on_error=False)
+    result = comrun.run(command, raise_on_error=False)
 
-    assert (
-        result.success
-    ), f"Command '{command}' must successfully execute with exit code 0."
+    assert result.success, (
+        f"Command '{command}' must successfully execute with exit code 0."
+    )
 
     # test a valid command with non-zero exit code (without raising an exception
     command = "false" if not IS_ON_WINDOWS else "exit /b 42"
     excepted_exit_code = 1
-    result = comrun(command, raise_on_error=False)
+    result = comrun.run(command, raise_on_error=False)
 
     assert result.failure, f"Command '{command}' must fail with non-zero exit code."
-    assert (
-        result.exit_code == excepted_exit_code
-    ), f"Command '{command}' must fail with exit code {excepted_exit_code}."
+    assert result.exit_code == excepted_exit_code, (
+        f"Command '{command}' must fail with exit code {excepted_exit_code}."
+    )
 
     # same for async
-    a_result = await comrun.a(command, raise_on_error=False)
-    assert (
-        a_result == result
-    ), "The async invocation result should be the same as the sync result."
+    a_result = await comrun.run_async(command, raise_on_error=False)
+    assert a_result == result, (
+        "The async invocation result should be the same as the sync result."
+    )
 
     # test a valid command with non-zero exit code (with raise_on_error)
     with pytest.raises(CommandError):
-        comrun(command, raise_on_error=True)
+        comrun.run(command, raise_on_error=True)
 
 
 @pytest.mark.asyncio
@@ -52,25 +52,25 @@ async def test_cwd():
 
     # current working directory
     command = "pwd"
-    result = comrun("pwd")
+    result = comrun.run("pwd")
 
     assert result.success, f"Command '{command}' must successfully execute."
     assert result.output.stripped == os.getcwd(), "Working directory is not correct."
 
     # custom working directory
     custom_cwd = str(Path(__file__).parent.parent)
-    result = comrun(command, cwd=custom_cwd)
+    result = comrun.run(command, cwd=custom_cwd)
 
     assert result.success, f"Command '{command}' must successfully execute."
-    assert (
-        result.output.stripped == custom_cwd
-    ), "Custom working directory is not correct."
+    assert result.output.stripped == custom_cwd, (
+        "Custom working directory is not correct."
+    )
 
     # same for async
-    a_result = await comrun.a(command, cwd=custom_cwd)
-    assert (
-        a_result == result
-    ), "The async invocation result should be the same as the sync result."
+    a_result = await comrun.run_async(command, cwd=custom_cwd)
+    assert a_result == result, (
+        "The async invocation result should be the same as the sync result."
+    )
 
 
 @pytest.mark.asyncio
@@ -86,21 +86,21 @@ async def test_output():
     test_echo_message = "\n".join(test_echo_message_lines)
 
     command = f"echo '{test_echo_message}'"
-    result = comrun(command, wsl=True)
+    result = comrun.run(command, wsl=True)
 
     assert result.success, f"Command '{command}' must successfully execute."
-    assert (
-        result.output.text == test_echo_message
-    ), "Stripped captured output of the command is not correct."
-    assert (
-        result.output.lines == test_echo_message_lines
-    ), "Captured output of the command split into lines is not correct."
+    assert result.output.text == test_echo_message, (
+        "Stripped captured output of the command is not correct."
+    )
+    assert result.output.lines == test_echo_message_lines, (
+        "Captured output of the command split into lines is not correct."
+    )
 
     # same for async
-    a_result = await comrun.a(command, wsl=True)
-    assert (
-        a_result == result
-    ), "The async invocation result should be the same as the sync result."
+    a_result = await comrun.run_async(command, wsl=True)
+    assert a_result == result, (
+        "The async invocation result should be the same as the sync result."
+    )
 
 
 @pytest.mark.asyncio
@@ -115,18 +115,18 @@ async def test_environment_variables():
     test_env = {test_env_var_name: test_env_var_value}
 
     command = f"printenv {test_env_var_name}"
-    result = comrun(command, env=test_env)
+    result = comrun.run(command, env=test_env)
 
     assert result.success, f"Command '{command}' must successfully execute."
-    assert (
-        result.output.stripped == test_env_var_value
-    ), "Environment variable is not set correctly."
+    assert result.output.stripped == test_env_var_value, (
+        "Environment variable is not set correctly."
+    )
 
     # same for async
-    a_result = await comrun.a(command, env=test_env)
-    assert (
-        a_result == result
-    ), "The async invocation result should be the same as the sync result."
+    a_result = await comrun.run_async(command, env=test_env)
+    assert a_result == result, (
+        "The async invocation result should be the same as the sync result."
+    )
 
 
 @pytest.mark.asyncio
@@ -140,11 +140,11 @@ async def test_invalid_command():
         "invalid_command_that_doesnt_exist --with-invalid-option and-invalid-argument"
     )
     with pytest.raises(FileNotFoundError):
-        comrun(invalid_command, raise_on_error=False)
+        comrun.run(invalid_command, raise_on_error=False)
 
     # same for async
     with pytest.raises(FileNotFoundError):
-        await comrun.a(invalid_command, raise_on_error=False)
+        await comrun.run_async(invalid_command, raise_on_error=False)
 
 
 @pytest.mark.asyncio
@@ -155,12 +155,12 @@ async def test_command_result_truthiness():
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
-    result = comrun(command, raise_on_error=False)
+    result = comrun.run(command, raise_on_error=False)
 
     assert result, "A successful command must be truthy."
 
     # test a valid command with non-zero exit code
     command = "false" if not IS_ON_WINDOWS else "exit /b 42"
-    result = comrun(command, raise_on_error=False)
+    result = comrun.run(command, raise_on_error=False)
 
     assert not result, "A failed command must not be truthy."

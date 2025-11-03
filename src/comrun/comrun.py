@@ -2,6 +2,7 @@ import asyncio
 import os
 import shlex
 import subprocess
+import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from threading import Lock
@@ -64,6 +65,26 @@ class CommandRunner:
     """Callback to execute after the command is finished. Receives the CommandResult object and quiet flag as arguments."""
 
     def __call__(
+        self,
+        command: str | list[str],
+        *,
+        cwd: os.PathLike[str] | str | None = None,
+        env: dict[str, str] | None = None,
+        quiet: bool | None = None,
+        raise_on_error: bool | None = None,
+        wsl: bool | None = None,
+    ) -> CommandResult:
+        """Alias for run()."""
+        return self.run(
+            command,
+            cwd=cwd,
+            env=env,
+            quiet=quiet,
+            raise_on_error=raise_on_error,
+            wsl=wsl,
+        )
+
+    def run(
         self,
         command: str | list[str],
         *,
@@ -199,7 +220,7 @@ class CommandRunner:
 
         return result
 
-    async def a(
+    async def run_async(
         self,
         command: str | list[str],
         *,
@@ -225,7 +246,7 @@ class CommandRunner:
                 Defaults to the value set in the constructor.
         """
         return await asyncio.to_thread(
-            self.__call__,
+            self.run,
             command,
             cwd=cwd,
             env=env,
