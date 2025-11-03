@@ -92,7 +92,7 @@ async def test_output():
     assert result.output.text == test_echo_message, (
         "Stripped captured output of the command is not correct."
     )
-    assert result.output.lines == test_echo_message_lines, (
+    assert list(result.output.lines) == test_echo_message_lines, (
         "Captured output of the command split into lines is not correct."
     )
 
