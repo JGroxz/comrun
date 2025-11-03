@@ -3,17 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from comrun import CommandRunner
-from comrun.errors import CommandError
+from comrun import CommandRunner, CommandError
 
 IS_ON_WINDOWS = os.name == "nt"
 
 
 @pytest.mark.asyncio
-async def test_exit_codes():
+async def test_exit_codes(comrun: CommandRunner):
+    """
+    Tests that exit codes are captured correctly for successful and failing commands.
+    """
     assert not IS_ON_WINDOWS, "This test is not tested on Windows (yet)."
-
-    comrun = CommandRunner()
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
@@ -45,10 +45,10 @@ async def test_exit_codes():
 
 
 @pytest.mark.asyncio
-async def test_cwd():
-    """Test that the working directory is being set correctly when running a shell command."""
-
-    comrun = CommandRunner()
+async def test_cwd(comrun: CommandRunner):
+    """
+    Tests that the working directory is being set correctly when running a shell command.
+    """
 
     # current working directory
     command = "pwd"
@@ -74,10 +74,10 @@ async def test_cwd():
 
 
 @pytest.mark.asyncio
-async def test_output():
-    """Test that a valid shell command is executed correctly."""
-
-    comrun = CommandRunner()
+async def test_output(comrun: CommandRunner):
+    """
+    Tests that stdout, stderr, and combined output are captured in the expected formats.
+    """
 
     test_echo_message_lines = [
         "The cake is a lie.",
@@ -104,10 +104,10 @@ async def test_output():
 
 
 @pytest.mark.asyncio
-async def test_environment_variables():
-    """Test that environment variables are being set correctly when running a shell command."""
-
-    comrun = CommandRunner()
+async def test_environment_variables(comrun: CommandRunner):
+    """
+    Tests that environment variables are applied to the spawned subprocess.
+    """
 
     # test environment variables
     test_env_var_name = "TEST_ENV_VAR"
@@ -130,10 +130,10 @@ async def test_environment_variables():
 
 
 @pytest.mark.asyncio
-async def test_invalid_command():
-    """Test that an invalid shell command raises an exception."""
-
-    comrun = CommandRunner()
+async def test_invalid_command(comrun: CommandRunner):
+    """
+    Tests that running a non-existent command raises the expected exception.
+    """
 
     # test an invalid command (it must raise an exception even if raise_on_error is False)
     invalid_command = (
@@ -147,11 +147,10 @@ async def test_invalid_command():
         await comrun.run_async(invalid_command, raise_on_error=False)
 
 
-@pytest.mark.asyncio
-async def test_command_result_truthiness():
-    """Test that the truthiness of a CommandResult object is based on the success of the command."""
-
-    comrun = CommandRunner()
+def test_command_result_truthiness(comrun: CommandRunner):
+    """
+    Tests that CommandResult truthiness reflects command success.
+    """
 
     # test a valid command with zero exit code
     command = "true" if (not IS_ON_WINDOWS) else "exit /b 0"
@@ -160,7 +159,7 @@ async def test_command_result_truthiness():
     assert result, "A successful command must be truthy."
 
     # test a valid command with non-zero exit code
-    command = "false" if not IS_ON_WINDOWS else "exit /b 42"
+    command = "false" if (not IS_ON_WINDOWS) else "exit /b 42"
     result = comrun.run(command, raise_on_error=False)
 
     assert not result, "A failed command must not be truthy."
