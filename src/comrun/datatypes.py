@@ -3,6 +3,8 @@ from __future__ import annotations
 import signal
 from dataclasses import dataclass
 from functools import cached_property
+from os import PathLike
+from typing import Mapping
 
 
 @dataclass(frozen=True)
@@ -88,3 +90,23 @@ class CommandOutput:
 
     def __str__(self):
         return self.text
+
+
+@dataclass(frozen=True)
+class CommandContext:
+    """
+    Resolved execution context supplied to CommandRunner hooks.
+    """
+
+    command: str
+    """Command string that will be executed."""
+    cwd: PathLike[str] | str | None
+    """Effective working directory for the subprocess."""
+    env: Mapping[str, str] | None
+    """Environment variables supplied to the subprocess, if any."""
+    quiet: bool
+    """Whether live output printing is suppressed."""
+    check: bool
+    """Whether non-zero exits will raise CommandError."""
+    wsl: bool
+    """Whether the command is executed through WSL."""

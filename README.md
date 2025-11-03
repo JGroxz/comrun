@@ -111,16 +111,14 @@ custom `on_line` callback to the `CommandRunner`
 constructor:
 
 ```python
-from comrun import CommandRunner
+from comrun import CommandRunner, CommandContext
 
 
-def print_line_with_stream_name(line: str, command: str, is_stderr: bool):
+def print_line_with_stream_name(line: str, is_stderr: bool, ctx: CommandContext):
     # Note: line argument does not have a trailing newline character
 
-    if is_stderr:
-        print(f"STDERR | {line}")
-    else:
-        print(f"STDOUT | {line}")
+    stream = "STDERR" if is_stderr else "STDOUT"
+    print(f"{stream} | {ctx.command} | {line}")
 
 
 comrun = CommandRunner(on_line=print_line_with_stream_name)

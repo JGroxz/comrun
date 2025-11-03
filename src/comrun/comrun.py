@@ -10,7 +10,7 @@ from typing import IO, Callable
 
 import rich
 
-from .datatypes import CommandOutput, CommandResult
+from .datatypes import CommandContext, CommandOutput, CommandResult
 from .errors import CommandError
 
 _IS_ON_WINDOWS = os.name == "nt"
@@ -18,7 +18,7 @@ _OUTPUT_ENCODING = "utf-8"
 _UNSET = object()
 
 
-def _default_on_line(line: str, command: str, is_stderr: bool):
+def _default_on_line(line: str, is_stderr: bool, ctx: CommandContext):
     """
     Default line print callback that uses the Rich console to print the line.
     """
@@ -46,12 +46,12 @@ class CommandRunner:
     wsl: bool = True
     """On Windows, run the command through WSL when True; ignored on other platforms."""
 
-    on_line: Callable[[str, str, bool], None] = _default_on_line
-    """Per-line output callback `(line, command, is_stderr)`; skipped when quiet=True. Defaults to Rich console."""
-    on_start: Callable[[str, bool], None] | None = None
-    """Hook invoked just before execution with the command string and quiet flag."""
-    on_finish: Callable[[CommandResult, bool], None] | None = None
-    """Hook invoked after completion with the CommandResult and quiet flag."""
+    on_line: Callable[[str, bool, CommandContext], None] = _default_on_line
+    """Per-line output callback `(line, is_stderr, ctx)`; skipped when quiet=True. Defaults to Rich console."""
+    on_start: Callable[[CommandContext], None] | None = None
+    """Hook invoked just before execution with the resolved command context."""
+    on_finish: Callable[[CommandResult, CommandContext], None] | None = None
+    """Hook invoked after completion with the CommandResult and command context."""
 
     def with_options(
         self,
@@ -61,9 +61,9 @@ class CommandRunner:
         quiet: bool | None | object = _UNSET,
         check: bool | None | object = _UNSET,
         wsl: bool | None | object = _UNSET,
-        on_line: Callable[[str, str, bool], None] | object = _UNSET,
-        on_start: Callable[[str, bool], None] | None | object = _UNSET,
-        on_finish: Callable[[CommandResult, bool], None] | None | object = _UNSET,
+        on_line: Callable[[str, bool, CommandContext], None] | object = _UNSET,
+        on_start: Callable[[CommandContext], None] | None | object = _UNSET,
+        on_finish: Callable[[CommandResult, CommandContext], None] | None | object = _UNSET,
     ) -> "CommandRunner":
         """
         Returns a copy of this CommandRunner with the provided options overridden.
@@ -151,8 +151,17 @@ class CommandRunner:
         args = shlex.split(command) if isinstance(command, str) else command
 
         # Execute the pre-run callback
+        context = CommandContext(
+            command=command_string,
+            cwd=cwd,
+            env=env,
+            quiet=quiet,
+            check=check,
+            wsl=bool(_IS_ON_WINDOWS and wsl),
+        )
+
         if self.on_start:
-            self.on_start(command_string, quiet)
+            self.on_start(context)
 
         # Start the subprocess
         process = subprocess.Popen(  # nosec
@@ -199,7 +208,7 @@ class CommandRunner:
                     # Print to console if not silenced
                     if not quiet:
                         try:
-                            self.on_line(decoded_line, command_string, _stderr)
+                            self.on_line(decoded_line, _stderr, context)
                         except Exception as e:
                             error_message = str(e).replace("[", "\\[")
                             rich.print(
@@ -237,7 +246,7 @@ class CommandRunner:
 
         # Execute the post-run callback
         if self.on_finish:
-            self.on_finish(result, quiet)
+            self.on_finish(result, context)
 
         return result
 
