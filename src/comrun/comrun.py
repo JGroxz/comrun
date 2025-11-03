@@ -139,11 +139,11 @@ class CommandRunner:
         """
 
         # Use the arguments or pre-configured values
-        cwd = cwd or self.cwd
-        env = env or self.env
-        wsl = wsl or self.wsl
-        quiet = quiet or self.quiet
-        check = check if (check is not None) else self.check
+        cwd = self.cwd if (cwd is None) else cwd
+        env = self.env if (env is None) else env
+        wsl = self.wsl if (wsl is None) else wsl
+        quiet = self.quiet if (quiet is None) else quiet
+        check = self.check if (check is None) else check
 
         # Use WSL if required on Windows
         command_string = command if isinstance(command, str) else shlex.join(command)
