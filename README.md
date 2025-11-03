@@ -107,7 +107,7 @@ result = comrun('exit 1', check=True)
 
 By default, **comrun** uses rich's `Console` for printing stdout and stderr lines as they come in from the command
 subprocess (unless `quiet=True` is passed). This output handling can be changed by passing a
-custom `live_output_callback` to the `CommandRunner`
+custom `on_line` callback to the `CommandRunner`
 constructor:
 
 ```python
@@ -123,7 +123,7 @@ def print_line_with_stream_name(line: str, command: str, is_stderr: bool):
         print(f"STDOUT | {line}")
 
 
-comrun = CommandRunner(live_output_callback=print_line_with_stream_name)
+comrun = CommandRunner(on_line=print_line_with_stream_name)
 
 comrun('echo "For science."')
 

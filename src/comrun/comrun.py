@@ -18,7 +18,7 @@ _OUTPUT_ENCODING = "utf-8"
 _UNSET = object()
 
 
-def _default_live_output_callback(line: str, command: str, is_stderr: bool):
+def _default_on_line(line: str, command: str, is_stderr: bool):
     """
     Default line print callback that uses the Rich console to print the line.
     """
@@ -36,34 +36,22 @@ def _default_live_output_callback(line: str, command: str, is_stderr: bool):
 @dataclass(frozen=True, kw_only=True)
 class CommandRunner:
     cwd: os.PathLike[str] | str | None = None
-    """Working directory to execute the command in."""
+    """Working directory for launched commands; defaults to the parent process cwd when unset."""
     env: dict[str, str] | None = None
-    """Environment variables for the command's subprocess."""
+    """Environment variable overrides merged into the subprocess environment."""
     quiet: bool = False
-    """If set to True, command output will not be printed to console. If set to False, command output will be printed to the console."""
+    """Suppress live output when True; defaults to streaming command output to the console."""
     check: bool = False
-    """If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code."""
+    """Raise CommandError on non-zero exit codes when True (mirrors subprocess.run(check=True))."""
     wsl: bool = True
-    """If set to True (default) and running on Windows, the provided command will be run in WSL."""
+    """On Windows, run the command through WSL when True; ignored on other platforms."""
 
-    live_output_callback: Callable[[str, str, bool], None] = (
-        _default_live_output_callback
-    )
-    """
-    Callback to print a line of the command's output.
-    Will not be called if the 'quiet' option is set to True.
-
-    Args:
-        line: The line to print.
-        command: String containing the command producing the output.
-        stderr: If set to True, the line is from the command's stderr stream (stdout otherwise).
-
-    Defaults to using print() if not set.
-    """
-    pre_run_callback: Callable[[str, bool], None] | None = None
-    """Callback to execute before the command is run. Receives the command string and quiet flag as arguments."""
-    post_run_callback: Callable[[CommandResult, bool], None] | None = None
-    """Callback to execute after the command is finished. Receives the CommandResult object and quiet flag as arguments."""
+    on_line: Callable[[str, str, bool], None] = _default_on_line
+    """Per-line output callback `(line, command, is_stderr)`; skipped when quiet=True. Defaults to Rich console."""
+    on_start: Callable[[str, bool], None] | None = None
+    """Hook invoked just before execution with the command string and quiet flag."""
+    on_finish: Callable[[CommandResult, bool], None] | None = None
+    """Hook invoked after completion with the CommandResult and quiet flag."""
 
     def with_options(
         self,
@@ -73,11 +61,9 @@ class CommandRunner:
         quiet: bool | None | object = _UNSET,
         check: bool | None | object = _UNSET,
         wsl: bool | None | object = _UNSET,
-        live_output_callback: Callable[[str, str, bool], None] | object = _UNSET,
-        pre_run_callback: Callable[[str, bool], None] | None | object = _UNSET,
-        post_run_callback: Callable[[CommandResult, bool], None]
-        | None
-        | object = _UNSET,
+        on_line: Callable[[str, str, bool], None] | object = _UNSET,
+        on_start: Callable[[str, bool], None] | None | object = _UNSET,
+        on_finish: Callable[[CommandResult, bool], None] | None | object = _UNSET,
     ) -> "CommandRunner":
         """
         Returns a copy of this CommandRunner with the provided options overridden.
@@ -94,12 +80,12 @@ class CommandRunner:
             updates["check"] = check
         if wsl is not _UNSET:
             updates["wsl"] = wsl
-        if live_output_callback is not _UNSET:
-            updates["live_output_callback"] = live_output_callback
-        if pre_run_callback is not _UNSET:
-            updates["pre_run_callback"] = pre_run_callback
-        if post_run_callback is not _UNSET:
-            updates["post_run_callback"] = post_run_callback
+        if on_line is not _UNSET:
+            updates["on_line"] = on_line
+        if on_start is not _UNSET:
+            updates["on_start"] = on_start
+        if on_finish is not _UNSET:
+            updates["on_finish"] = on_finish
 
         return replace(self, **updates) if updates else self
 
@@ -165,8 +151,8 @@ class CommandRunner:
         args = shlex.split(command) if isinstance(command, str) else command
 
         # execute pre-run callback
-        if self.pre_run_callback:
-            self.pre_run_callback(command_string, quiet)
+        if self.on_start:
+            self.on_start(command_string, quiet)
 
         # start the subprocess
         process = subprocess.Popen(  # nosec
@@ -213,13 +199,11 @@ class CommandRunner:
                     # print to console if not silenced
                     if not quiet:
                         try:
-                            self.live_output_callback(
-                                decoded_line, command_string, _stderr
-                            )
+                            self.on_line(decoded_line, command_string, _stderr)
                         except Exception as e:
                             error_message = str(e).replace("[", "\\[")
                             rich.print(
-                                f"[red][i]{type(e).__name__}[/] caught in live output callback:[/] {error_message}"
+                                f"[red][i]{type(e).__name__}[/] caught in on_line handler:[/] {error_message}"
                             )
 
         try:
@@ -252,8 +236,8 @@ class CommandRunner:
             raise CommandError(command_string, result)
 
         # execute post-run callback
-        if self.post_run_callback:
-            self.post_run_callback(result, quiet)
+        if self.on_finish:
+            self.on_finish(result, quiet)
 
         return result
 
