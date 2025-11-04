@@ -236,18 +236,20 @@ class CommandRunner:
                 process.stderr,
                 ThreadPoolExecutor(max_workers=2) as executor,
             ):
-                executor.submit(
+                stdout_future = executor.submit(
                     _handle_subprocess_output,
                     process.stdout,
                     False,
                     encoding=encoding,
                 )
-                executor.submit(
+                stderr_future = executor.submit(
                     _handle_subprocess_output,
                     process.stderr,
                     True,
                     encoding=encoding,
                 )
+                stdout_future.result()
+                stderr_future.result()
         except KeyboardInterrupt:
             # Kill the subprocess if the user interrupts the program
             process.kill()
