@@ -1,8 +1,8 @@
 import asyncio
+import locale
 import os
 import shlex
 import subprocess
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from threading import Lock
@@ -13,8 +13,8 @@ import rich
 from .datatypes import CommandContext, CommandOutput, CommandResult
 from .errors import CommandError
 
+_DEFAULT_ENCODING = locale.getpreferredencoding(False) or "utf-8"
 _IS_ON_WINDOWS = os.name == "nt"
-_OUTPUT_ENCODING = "utf-8"
 _UNSET = object()
 
 
@@ -48,7 +48,8 @@ class CommandRunner:
     """Raise CommandError on non-zero exit codes when True (mirrors subprocess.run(check=True))."""
     wsl: bool = True
     """On Windows, run the command through WSL when True; ignored on other platforms."""
-
+    encoding: str = _DEFAULT_ENCODING
+    """Encoding used to decode command output."""
     on_line: Callable[[str, StreamName, CommandContext], None] = _default_on_line
     """Per-line output callback `(line, stream, ctx)`; skipped when quiet=True. Defaults to Rich console."""
     on_start: Callable[[CommandContext], None] | None = None
@@ -66,7 +67,10 @@ class CommandRunner:
         wsl: bool | None | object = _UNSET,
         on_line: Callable[[str, StreamName, CommandContext], None] | object = _UNSET,
         on_start: Callable[[CommandContext], None] | None | object = _UNSET,
-        on_finish: Callable[[CommandResult, CommandContext], None] | None | object = _UNSET,
+        on_finish: Callable[[CommandResult, CommandContext], None]
+        | None
+        | object = _UNSET,
+        encoding: str | object = _UNSET,
     ) -> "CommandRunner":
         """
         Returns a copy of this CommandRunner with the provided options overridden.
@@ -89,6 +93,8 @@ class CommandRunner:
             updates["on_start"] = on_start
         if on_finish is not _UNSET:
             updates["on_finish"] = on_finish
+        if encoding is not _UNSET:
+            updates["encoding"] = encoding
 
         return replace(self, **updates) if updates else self
 
@@ -153,6 +159,8 @@ class CommandRunner:
         # Prepare the command args list
         args = shlex.split(command) if isinstance(command, str) else command
 
+        encoding = self.encoding
+
         # Execute the pre-run callback
         context = CommandContext(
             command=command_string,
@@ -161,6 +169,7 @@ class CommandRunner:
             quiet=quiet,
             check=check,
             wsl=bool(_IS_ON_WINDOWS and wsl),
+            encoding=encoding,
         )
 
         if self.on_start:
@@ -188,12 +197,12 @@ class CommandRunner:
         all_lines: list[str] = []
 
         # Define the output line callback
-        def _handle_subprocess_output(pipe: IO, _stderr: bool):
+        def _handle_subprocess_output(pipe: IO, _stderr: bool, *, encoding: str):
             """
             Reads lines from the stream and decodes them.
             """
-            for line in iter(pipe.readline, b""):  # b'\n'-separated lines.
-                decoded_line: str = line.decode(_OUTPUT_ENCODING, errors="replace")
+            for line in iter(pipe.readline, b""):  # Lines are separated by b'\n'.
+                decoded_line: str = line.decode(encoding, errors="replace")
 
                 # Remove the trailing newline characters
                 decoded_line = decoded_line.rstrip("\r\n")
@@ -226,8 +235,18 @@ class CommandRunner:
                 process.stderr,
                 ThreadPoolExecutor(max_workers=2) as executor,
             ):
-                executor.submit(_handle_subprocess_output, process.stdout, False)
-                executor.submit(_handle_subprocess_output, process.stderr, True)
+                executor.submit(
+                    _handle_subprocess_output,
+                    process.stdout,
+                    False,
+                    encoding=encoding,
+                )
+                executor.submit(
+                    _handle_subprocess_output,
+                    process.stderr,
+                    True,
+                    encoding=encoding,
+                )
         except KeyboardInterrupt:
             # Kill the subprocess if the user interrupts the program
             process.kill()

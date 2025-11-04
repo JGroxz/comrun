@@ -110,3 +110,5 @@ class CommandContext:
     """Whether non-zero exits will raise CommandError."""
     wsl: bool
     """Whether the command is executed through WSL."""
+    encoding: str
+    """Encoding used for decoding the subprocess output."""
