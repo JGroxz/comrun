@@ -3,6 +3,8 @@ from __future__ import annotations
 import signal
 from dataclasses import dataclass
 from functools import cached_property
+from os import PathLike
+from typing import Mapping
 
 
 @dataclass(frozen=True)
@@ -45,7 +47,7 @@ class CommandResult:
                 return f"Command '{self.command}' died with unknown signal {-self.exit_code:d}."
 
         if self.exit_code == 0:
-            return f"Command '{self.command}' finished with non-zero exit status {self.exit_code:d}."
+            return f"Command '{self.command}' finished with exit status {self.exit_code:d}."
 
         return f"Command '{self.command}' finished with exit code {self.exit_code:d}."
 
@@ -56,8 +58,12 @@ class CommandResult:
 
 @dataclass(frozen=True)
 class CommandOutput:
-    lines: list[str]
+    lines: tuple[str, ...]
     """Output split into lines."""
+
+    def __post_init__(self):
+        # Ensure immutability even if a list was provided
+        object.__setattr__(self, "lines", tuple(self.lines))
 
     @cached_property
     def text(self) -> str:
@@ -84,3 +90,25 @@ class CommandOutput:
 
     def __str__(self):
         return self.text
+
+
+@dataclass(frozen=True)
+class CommandContext:
+    """
+    Resolved execution context supplied to CommandRunner hooks.
+    """
+
+    command: str
+    """Command string that will be executed."""
+    cwd: PathLike[str] | str | None
+    """Effective working directory for the subprocess."""
+    env: Mapping[str, str] | None
+    """Environment variables supplied to the subprocess, if any."""
+    quiet: bool
+    """Whether live output printing is suppressed."""
+    check: bool
+    """Whether non-zero exits will raise CommandError."""
+    wsl: bool
+    """Whether the command is executed through WSL."""
+    encoding: str
+    """Encoding used for decoding the subprocess output."""
