@@ -108,6 +108,7 @@ class CommandRunner:
         quiet: bool | None = None,
         check: bool | None = None,
         wsl: bool | None = None,
+        encoding: str | None = None,
     ) -> CommandResult:
         """Alias for run()."""
         return self.run(
@@ -117,6 +118,7 @@ class CommandRunner:
             quiet=quiet,
             check=check,
             wsl=wsl,
+            encoding=encoding,
         )
 
     def run(
@@ -128,6 +130,7 @@ class CommandRunner:
         quiet: bool | None = None,
         check: bool | None = None,
         wsl: bool | None = None,
+        encoding: str | None = None,
     ) -> CommandResult:
         """
         Executes the given command in a subprocess.
@@ -143,6 +146,7 @@ class CommandRunner:
             check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
                 Defaults to the value set in the constructor.
+            encoding: Encoding to use when decoding command output. Defaults to the runner's configured encoding.
         """
 
         # Use the arguments or pre-configured values
@@ -151,6 +155,7 @@ class CommandRunner:
         wsl = self.wsl if (wsl is None) else wsl
         quiet = self.quiet if (quiet is None) else quiet
         check = self.check if (check is None) else check
+        encoding = self.encoding if (encoding is None) else encoding
 
         # Use WSL if required on Windows
         command_string = command if isinstance(command, str) else shlex.join(command)
@@ -160,9 +165,7 @@ class CommandRunner:
         # Prepare the command args list
         args = shlex.split(command) if isinstance(command, str) else command
 
-        encoding = self.encoding
-
-        # Execute the pre-run callback
+        # Craft the context
         context = CommandContext(
             command=command_string,
             cwd=cwd,
@@ -173,6 +176,7 @@ class CommandRunner:
             encoding=encoding,
         )
 
+        # Execute the pre-run callback
         if self.on_start:
             self.on_start(context)
 
@@ -285,6 +289,7 @@ class CommandRunner:
         quiet: bool | None = None,
         check: bool | None = None,
         wsl: bool | None = None,
+        encoding: str | None = None,
     ) -> CommandResult:
         """
         Executes the given command in a subprocess, asynchronously.
@@ -300,6 +305,7 @@ class CommandRunner:
             check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
                 Defaults to the value set in the constructor.
+            encoding: Encoding to use when decoding command output.
         """
         return await asyncio.to_thread(
             self.run,
@@ -309,4 +315,5 @@ class CommandRunner:
             quiet=quiet,
             check=check,
             wsl=wsl,
+            encoding=encoding,
         )
