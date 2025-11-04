@@ -66,12 +66,12 @@ class CommandRunner:
         quiet: bool | None | object = _UNSET,
         check: bool | None | object = _UNSET,
         wsl: bool | None | object = _UNSET,
+        encoding: str | object = _UNSET,
         on_line: Callable[[str, StreamName, CommandContext], None] | object = _UNSET,
         on_start: Callable[[CommandContext], None] | None | object = _UNSET,
         on_finish: Callable[[CommandResult, CommandContext], None]
         | None
         | object = _UNSET,
-        encoding: str | object = _UNSET,
     ) -> "CommandRunner":
         """
         Returns a copy of this CommandRunner with the provided options overridden.
@@ -138,15 +138,16 @@ class CommandRunner:
         Args:
             command: Command to execute.
             cwd: Working directory to execute the command in.
-                Defaults to the working directory set in the constructor.
+                Defaults to runner's current configuration.
             env: Environment variables for the command's subprocess.
-                Defaults to the environment set in the constructor.
+                Defaults to runner's current configuration.
             quiet: If set to True, command output will be suppressed. If set to False, command output will be printed to the console.
-                Defaults to the value set in the constructor.
+                Defaults to runner's current configuration.
             check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
-                Defaults to the value set in the constructor.
-            encoding: Encoding to use when decoding command output. Defaults to the runner's configured encoding.
+                Defaults to runner's current configuration.
+            encoding: Encoding to use when decoding command output.
+                Defaults to runner's current configuration.
         """
 
         # Use the arguments or pre-configured values
@@ -297,15 +298,16 @@ class CommandRunner:
         Args:
             command: Command to execute.
             cwd: Working directory to execute the command in.
-                Defaults to the working directory set in the constructor.
+                Defaults to runner's current configuration.
             env: Environment variables for the command's subprocess.
-                Defaults to the environment set in the constructor.
+                Defaults to runner's current configuration.
             quiet: If set to True, command output will be suppressed. If set to False, command output will be printed to the console.
-                Defaults to the value set in the constructor.
+                Defaults to runner's current configuration.
             check: If set to True, a CommandError will be raised if the executed command exits with a non-zero exit code.
             wsl: If set to True and running on Windows, the provided command will be run in WSL.
-                Defaults to the value set in the constructor.
+                Defaults to runner's current configuration.
             encoding: Encoding to use when decoding command output.
+                Defaults to runner's current configuration.
         """
         return await asyncio.to_thread(
             self.run,

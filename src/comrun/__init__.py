@@ -1,4 +1,4 @@
-from .comrun import CommandRunner, CommandError
+from .comrun import CommandRunner, CommandError, StreamName
 from .datatypes import CommandContext, CommandOutput, CommandResult
 
 __all__ = [
@@ -7,4 +7,5 @@ __all__ = [
     "CommandResult",
     "CommandOutput",
     "CommandError",
+    "StreamName",
 ]
