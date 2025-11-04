@@ -193,10 +193,10 @@ class CommandRunner:
             Reads lines from the stream and decodes them.
             """
             for line in iter(pipe.readline, b""):  # b'\n'-separated lines.
-                decoded_line: str = line.decode(_OUTPUT_ENCODING)
+                decoded_line: str = line.decode(_OUTPUT_ENCODING, errors="replace")
 
-                # Remove the trailing newline character
-                decoded_line = decoded_line[:-1]
+                # Remove the trailing newline characters
+                decoded_line = decoded_line.rstrip("\r\n")
 
                 with output_lock:
                     # Capture output
