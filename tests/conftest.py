@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import io
+
 import pytest
 
 from comrun import CommandRunner
@@ -11,7 +15,9 @@ def pytest_pyfunc_call():
 
 @pytest.fixture()
 def comrun() -> CommandRunner:
-    """Provides a CommandRunner instance for tests."""
+    """
+    Provides a CommandRunner instance for tests.
+    """
 
     from comrun import CommandRunner
 
