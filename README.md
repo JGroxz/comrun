@@ -1,4 +1,4 @@
-# comrun
+# _\>__ comrun
 
 **comrun** (shorthand for **command runner**) is a simplified and configurable wrapper for
 Python's [`subprocess.Popen`](https://docs.python.org/3.11/library/subprocess.html#popen-constructor), focused on making
@@ -93,13 +93,13 @@ print(result.output)  # <- Prints all output lines of the command
 ### Exceptions
 
 By default, **comrun** will quietly execute the command even if it fails and returns a non-zero exit code. If you want
-to catch it as an exception instead, you can pass `raise_on_error=True`:
+to catch it as an exception instead, you can pass `check=True`:
 
 ```python
 result = comrun('exit 1')
 # (executed normally, result.exit_code == 1)
 
-result = comrun('exit 1', raise_on_error=True)
+result = comrun('exit 1', check=True)
 # (raises a CommandError because the command fails)
 ```
 
@@ -107,23 +107,20 @@ result = comrun('exit 1', raise_on_error=True)
 
 By default, **comrun** uses rich's `Console` for printing stdout and stderr lines as they come in from the command
 subprocess (unless `quiet=True` is passed). This output handling can be changed by passing a
-custom `live_output_callback` to the `CommandRunner`
+custom `on_line` callback to the `CommandRunner`
 constructor:
 
 ```python
-from comrun import CommandRunner
+from comrun import CommandContext, CommandRunner
 
 
-def print_line_with_stream_name(line: str, command: str, is_stderr: bool):
-    # note: line argument does not have a trailing newline character
+def print_line_with_stream_name(line: str, stream: str, ctx: CommandContext):
+    # Note: line argument does not have a trailing newline character
 
-    if is_stderr:
-        print(f"STDERR | {line}")
-    else:
-        print(f"STDOUT | {line}")
+    print(f"{stream.upper()} | {ctx.command} | {line}")
 
 
-comrun = CommandRunner(live_output_callback=print_line_with_stream_name)
+comrun = CommandRunner(on_line=print_line_with_stream_name)
 
 comrun('echo "For science."')
 
