@@ -9,6 +9,7 @@ from threading import Lock
 from typing import IO, Callable, Literal
 
 import rich
+from rich.markup import escape as rich_escape
 
 from .datatypes import CommandContext, CommandOutput, CommandResult
 from .errors import CommandError
@@ -28,12 +29,12 @@ def _default_on_line(line: str, stream: StreamName, ctx: CommandContext):
     console = rich.get_console()
 
     # Sanitize the line to prevent Rich from interpreting control characters
-    line = line.replace("[", "\\[")
+    line = rich_escape(line)
 
     # Set the style based on the stream
     style = "red" if stream == "stderr" else None
 
-    console.print(line, style=style)
+    console.print(line, style=style, crop=False)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -223,7 +224,7 @@ class CommandRunner:
                             stream: StreamName = "stderr" if _stderr else "stdout"
                             self.on_line(decoded_line, stream, context)
                         except Exception as e:
-                            error_message = str(e).replace("[", "\\[")
+                            error_message = rich_escape(str(e))
                             rich.print(
                                 f"[red][i]{type(e).__name__}[/] caught in on_line handler:[/] {error_message}"
                             )
