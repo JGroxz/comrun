@@ -28,8 +28,8 @@ class CommandError(SubprocessError):
     def __str__(self):
         if self.exit_code and self.exit_code < 0:
             try:
-                return f"Command '{self.cmd}' died with {signal.Signals(-self.exit_code)!r}."
+                return f"Command died with {signal.Signals(-self.exit_code)!r}: '{self.cmd}'"
             except ValueError:
-                return f"Command '{self.cmd}' died with unknown signal {-self.exit_code:d}."
+                return f"Command died with unknown signal {-self.exit_code:d}: '{self.cmd}'"
         else:
-            return f"Command '{self.cmd}' returned non-zero exit status {self.exit_code:d}."
+            return f"Command returned non-zero exit status {self.exit_code:d}: '{self.cmd}'"
