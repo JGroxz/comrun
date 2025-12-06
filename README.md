@@ -1,7 +1,6 @@
 # _\>__ comrun
 
 [![PyPI version](https://img.shields.io/pypi/v/comrun)](https://pypi.org/project/comrun/)
-[![Python versions](https://img.shields.io/pypi/pyversions/comrun)](https://pypi.org/project/comrun/)
 [![codecov](https://codecov.io/gh/jgroxz/comrun/branch/main/graph/badge.svg)](https://codecov.io/gh/jgroxz/comrun)
 [![Docs](https://img.shields.io/badge/docs-latest-brightgreen)](https://jgroxz.github.io/comrun/)
 
