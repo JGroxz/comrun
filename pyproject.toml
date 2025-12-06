@@ -32,3 +32,8 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "[%(asctime)s,%(msecs)03d] %(name)-40.40s %(levelname)s %(message)s"
 addopts = "--color=yes --cov=comrun --cov-report=term-missing"
+
+[project.urls]
+Homepage = "https://github.com/jgroxz/comrun"
+Repository = "https://github.com/jgroxz/comrun"
+Documentation = "https://jgroxz.github.io/comrun/"
