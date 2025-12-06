@@ -32,6 +32,6 @@ Explore the docs to learn how to use comrun:
 
 - Run your first command and read results: [Usage → General](usage_general.md)
 - Stream output with custom hooks: [Usage → Advanced](usage_advanced.md#live-output-hooks)
-- Examples of runner configurations: [Usage → Cookbook](cookbook.md)
+- Examples of common runner configurations: [Usage → Cookbook](cookbook.md)
 - Return types and behaviors: [Reference](reference.md)
 - See [Alternatives](alternatives.md) to compare with other command-running libraries.

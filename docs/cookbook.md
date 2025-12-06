@@ -20,7 +20,7 @@ from comrun import CommandContext, CommandRunner
 log = logging.getLogger(__name__)
 
 def log_lines(line: str, stream: str, ctx: CommandContext):
-    # log each line with stream name, command info and it's output
+    # log each line with stream name, command info and its output
     log.info("%s | %s | %s", stream.upper(), ctx.command, line)
 
 runner = CommandRunner(on_line=log_lines)
@@ -118,4 +118,4 @@ asyncio.run(main())
 ```
 
 1. `run_async` executes `run` in a worker thread (same semantics as sync).
-2. `asyncio.wait_for` enforces the timeout; on timeout, the process is not auto-killed—consider an external timeout wrapper if you need cancellation.
+2. `asyncio.wait_for` enforces the timeout; on timeout, the coroutine is cancelled but the subprocess is not killed—wrap the process in your own timeout/termination logic if needed.

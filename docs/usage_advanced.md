@@ -57,5 +57,5 @@ runner('echo "For science!"') # (3)!
 This is useful when you want to process or log command output in a custom way, such as prefixing lines with timestamps, writing to a file, or filtering certain messages.
 
 !!! warning "Things to be aware of when using `on_line`:"
-    - The `on_line` callback is called from separate reader threads for stdout and stderr. Make sure that your implementation is non-blocking and thread-safe to avoid issues with command execution or output handling."
-    - `on_line` is intended for printing the command's output. Therefore, when `quiet=True` is set on the runner or the individual `.run()` call, the `on_line` callback will not be invoked.
+    - The `on_line` callback runs on reader threads for stdout and stderr; keep it non-blocking and thread-safe.
+    - When `quiet=True` is set on the runner or the individual `.run()` call, `on_line` is skipped.
