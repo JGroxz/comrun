@@ -1,0 +1,61 @@
+site_name: comrun
+theme:
+  name: material
+  favicon: assets/favicon.png
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.instant
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+  palette:
+    # Dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: custom
+      accent: custom
+    # Light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: custom
+      accent: custom
+extra_css:
+  - stylesheets/palette.css
+  - stylesheets/brand.css
+repo_url: https://github.com/jgroxz/comrun
+repo_name: jgroxz/comrun
+edit_uri: edit/main/docs/
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jgroxz/comrun
+      name: comrun on GitHub
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+nav:
+  - Introduction: index.md
+  - Usage:
+      - General: usage_general.md
+      - Advanced: usage_advanced.md
+      - Cookbook: cookbook.md
+  - Reference: reference.md
+  - Alternatives: alternatives.md

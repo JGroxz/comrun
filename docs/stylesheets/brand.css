@@ -1,0 +1,21 @@
+/* Text-based logo for header: italic ">_" */
+.md-header__button.md-logo {
+  font-family: "Fira Code", "JetBrains Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+  color: inherit;
+  padding: 0 0.25rem;
+}
+
+/* Hide any image logo if present */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  display: none;
+}
+
+.md-header__button.md-logo::after {
+  content: ">_";
+  display: inline-block;
+}
